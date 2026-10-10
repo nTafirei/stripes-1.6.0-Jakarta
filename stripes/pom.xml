@@ -1,0 +1,174 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!-- Stripes core. Produces the stripes.jar needed in users webapps. -->
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>net.sourceforge.stripes</groupId>
+		<artifactId>stripes-parent</artifactId>
+		<version>1.6.0-JakartaEE10</version>
+		<relativePath>..</relativePath>
+	</parent>
+	<artifactId>stripes</artifactId>
+	<packaging>jar</packaging>
+
+	<name>Stripes</name>
+	<description>Stripes web framework jar, including tag library.</description>
+
+	<properties>
+		<tld.source>src/main/resources/META-INF</tld.source>
+		<tld.target>${project.build.outputDirectory}/META-INF</tld.target>
+		<tld.uri>http://stripes.sourceforge.net/stripes.tld</tld.uri>
+		<tld.dynuri>http://stripes.sourceforge.net/stripes-dynattr.tld</tld.dynuri>
+	</properties>
+
+	<dependencies>
+		<dependency>
+			<groupId>jakarta.servlet</groupId>
+			<artifactId>jakarta.servlet-api</artifactId>
+			<version>6.0.0</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.servlet.jsp</groupId>
+			<artifactId>jakarta.servlet.jsp-api</artifactId>
+			<version>3.1.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>jakarta.el</groupId>
+			<artifactId>jakarta.el-api</artifactId>
+			<version>5.0.1</version>
+			<scope>provided</scope>
+		</dependency>
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+			<version>4.13.2</version>
+			<scope>test</scope>
+		</dependency>
+		<dependency>
+			<groupId>org.apache.commons</groupId>
+			<artifactId>commons-fileupload2-jakarta</artifactId>
+			<version>2.0.0-M1</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-core</artifactId>
+			<version>5.3.29</version>
+		</dependency>
+		<dependency>
+			<groupId>org.springframework</groupId>
+			<artifactId>spring-context</artifactId>
+			<version>5.3.29</version>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<resources>
+			<resource>
+				<directory>src/main/resources</directory>
+				<includes>
+					<include>META-INF/stripes-buffered-layout.tld</include>
+				</includes>
+			</resource>
+		</resources>
+		<plugins>
+			<plugin>
+				<artifactId>maven-antrun-plugin</artifactId>
+				<version>3.1.0</version>
+				<executions>
+					<execution>
+						<phase>generate-resources</phase>
+						<configuration>
+							<target>
+								<!-- make two copies of the taglib, one with and one without dynamic attributes -->
+								<filter filtersfile="${tld.source}/common-descriptions.properties" />
+								<filter token="dynattrs" value="false" />
+								<copy file="${tld.source}/stripes.tld" todir="${tld.target}" filtering="true" />
+
+								<filter token="dynattrs" value="true" />
+								<copy file="${tld.source}/stripes.tld" tofile="${tld.target}/stripes-dynattr.tld" filtering="true" />
+								<replace file="${tld.target}/stripes-dynattr.tld" token="${tld.uri}" value="${tld.dynuri}" />
+								<replace file="${tld.target}/stripes-dynattr.tld" token="&lt;short-name&gt;stripes&lt;/short-name&gt;" value="&lt;short-name&gt;stripes-dynattr&lt;/short-name&gt;" />
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<argLine>-Dfile.encoding=UTF-8</argLine>
+					<includes>
+						<include>**/*.java</include>
+					</includes>
+					<forkCount>2</forkCount>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-jar-plugin</artifactId>
+				<configuration>
+					<archive>
+						<manifest>
+							<addDefaultImplementationEntries>true</addDefaultImplementationEntries>
+							<addDefaultSpecificationEntries>true</addDefaultSpecificationEntries>
+						</manifest>
+					</archive>
+				</configuration>
+			</plugin>
+			<plugin>
+				<groupId>net.sourceforge.maven-taglib</groupId>
+				<artifactId>maven-taglib-plugin</artifactId>
+				<configuration>
+					<taglib.src.dir>target/classes/META-INF/</taglib.src.dir>
+				</configuration>
+				<executions>
+					<execution>
+						<goals>
+							<goal>taglibdocjar</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-source-plugin</artifactId>
+				<executions>
+					<execution>
+						<id>attach-sources</id>
+						<goals>
+							<goal>jar-no-fork</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+			<plugin>
+				<groupId>org.codehaus.mojo</groupId>
+				<artifactId>cobertura-maven-plugin</artifactId>
+			</plugin>
+			<!--<plugin>
+				<groupId>com.coveo</groupId>
+				<artifactId>fmt-maven-plugin</artifactId>
+				<version>2.25</version>
+				<executions>
+					<execution>
+						<goals>
+							<goal>format</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>-->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-checkstyle-plugin</artifactId>
+				<version>3.3.0</version>
+			</plugin>
+		</plugins>
+	</build>
+</project>
